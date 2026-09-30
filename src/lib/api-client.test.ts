@@ -1,10 +1,14 @@
 import { HttpResponse, http } from 'msw'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { API_URL, server } from '../test/server.ts'
-import { ApiError, apiFetch, setTokenProvider } from './api-client.ts'
+import { ApiError, apiFetch, configureAuth } from './api-client.ts'
+
+function withToken(token: string | null, onUnauthorized = () => {}) {
+  configureAuth({ getToken: () => token, onUnauthorized })
+}
 
 describe('apiFetch', () => {
-  afterEach(() => setTokenProvider(() => null))
+  afterEach(() => withToken(null))
 
   it('returns the parsed JSON body', async () => {
     server.use(http.get(`${API_URL}/api/books`, () => HttpResponse.json([{ id: '1' }])))
@@ -13,7 +17,7 @@ describe('apiFetch', () => {
   })
 
   it('sends the JSON body and the bearer token when there is one', async () => {
-    setTokenProvider(() => 'abc')
+    withToken('abc')
     let received: { auth: string | null; type: string | null; body: unknown } | undefined
     server.use(
       http.post(`${API_URL}/api/books`, async ({ request }) => {
@@ -92,5 +96,27 @@ describe('apiFetch', () => {
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({ status: 502, fieldErrors: [] })
+  })
+
+  it('reports a 401 on a request sent with a token', async () => {
+    const onUnauthorized = vi.fn()
+    withToken('expired', onUnauthorized)
+    server.use(http.get(`${API_URL}/api/books`, () => new HttpResponse(null, { status: 401 })))
+
+    await expect(apiFetch('/api/books')).rejects.toMatchObject({ status: 401 })
+    expect(onUnauthorized).toHaveBeenCalledOnce()
+  })
+
+  it('does not report a 401 on a request sent without a token', async () => {
+    const onUnauthorized = vi.fn()
+    withToken(null, onUnauthorized)
+    server.use(
+      http.post(`${API_URL}/api/auth/login`, () => new HttpResponse(null, { status: 401 })),
+    )
+
+    await expect(apiFetch('/api/auth/login', { method: 'POST', body: {} })).rejects.toMatchObject({
+      status: 401,
+    })
+    expect(onUnauthorized).not.toHaveBeenCalled()
   })
 })

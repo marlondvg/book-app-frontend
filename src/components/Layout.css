@@ -5,6 +5,10 @@
 }
 
 .layout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   padding: 16px 0;
   border-bottom: 1px solid var(--border);
 }
@@ -13,4 +17,17 @@
   font-weight: 600;
   color: inherit;
   text-decoration: none;
+}
+
+.layout-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.layout-email {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

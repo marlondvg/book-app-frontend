@@ -19,13 +19,17 @@ export class ApiError extends Error {
   }
 }
 
-type TokenProvider = () => string | null
+type AuthHandlers = {
+  getToken: () => string | null
+  /** Called when a request sent with a token gets 401: the token expired or its user is gone. */
+  onUnauthorized: () => void
+}
 
-let getToken: TokenProvider = () => null
+let auth: AuthHandlers = { getToken: () => null, onUnauthorized: () => {} }
 
-/** Lets the auth layer supply the current access token without the client depending on it. */
-export function setTokenProvider(provider: TokenProvider) {
-  getToken = provider
+/** Lets the auth layer plug in its token and 401 handling without the client depending on it. */
+export function configureAuth(handlers: AuthHandlers) {
+  auth = handlers
 }
 
 type RequestOptions = {
@@ -37,7 +41,7 @@ type RequestOptions = {
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers = new Headers({ Accept: 'application/json' })
   if (options.body !== undefined) headers.set('Content-Type', 'application/json')
-  const token = getToken()
+  const token = auth.getToken()
   if (token) headers.set('Authorization', `Bearer ${token}`)
 
   const response = await fetch(`${baseUrl}${path}`, {
@@ -47,7 +51,10 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     signal: options.signal,
   })
 
-  if (!response.ok) throw await toApiError(response)
+  if (!response.ok) {
+    if (response.status === 401 && token) auth.onUnauthorized()
+    throw await toApiError(response)
+  }
   if (response.status === 204) return undefined as T
   return (await response.json()) as T
 }
