@@ -1,13 +1,27 @@
 import type { RouteObject } from 'react-router-dom'
+import { GuestOnly } from './auth/GuestOnly.tsx'
+import { RequireAuth } from './auth/RequireAuth.tsx'
 import { Layout } from './components/Layout.tsx'
 import { HomePage } from './pages/HomePage.tsx'
+import { LoginPage } from './pages/LoginPage.tsx'
 import { NotFoundPage } from './pages/NotFoundPage.tsx'
+import { RegisterPage } from './pages/RegisterPage.tsx'
 
 export const routes: RouteObject[] = [
   {
     element: <Layout />,
     children: [
-      { index: true, element: <HomePage /> },
+      {
+        element: <GuestOnly />,
+        children: [
+          { path: 'login', element: <LoginPage /> },
+          { path: 'register', element: <RegisterPage /> },
+        ],
+      },
+      {
+        element: <RequireAuth />,
+        children: [{ index: true, element: <HomePage /> }],
+      },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

@@ -26,12 +26,20 @@ To run against a local backend: `JWT_SECRET=$(openssl rand -base64 48) ./gradlew
 
 ## Architecture
 
-- `src/main.tsx` creates the React Query client and the browser router. `src/routes.tsx` holds the route tree as a plain `RouteObject[]`, so tests render the same tree with a memory router.
+- `src/main.tsx` calls `initSession()`, then renders `AppProviders` (the React Query provider) and the browser router. `src/routes.tsx` holds the route tree as a plain `RouteObject[]`, so tests render the same tree with a memory router.
 - `src/lib/api-client.ts`: every API call goes through `apiFetch<T>(path, { method, body })`.
-  - It sends JSON and adds `Authorization: Bearer <token>` when `setTokenProvider` returns a token. The auth layer registers that provider, so the client never imports auth code.
+  - It sends JSON and adds `Authorization: Bearer <token>` using the handlers registered with `configureAuth`. A 401 on a request that carried a token calls `onUnauthorized`. The client never imports auth code.
   - Any non-2xx response throws `ApiError`, built from the backend's RFC 9457 problem details: `status`, `title`, `detail`, and `fieldErrors` from the `errors` list returned on validation failures.
   - A 204 response resolves to `undefined`.
 - `src/lib/query-client.ts`: queries don't retry on `ApiError` 4xx responses, only on network and 5xx errors.
+- **Auth** (`src/auth/`):
+  - `session.ts` is a small external store: the JWT and its expiry, saved in `localStorage` under `book-tracker.session`. Read it with `useSession()`; change it with `startSession` / `endSession`.
+  - `initSession()` wires the store into `configureAuth`, so a 401 ends the session. It also ends the session when the token expires (1 hour, no refresh tokens) and syncs across tabs.
+  - When the session ends, `AppProviders` clears the query cache.
+  - Guards: `RequireAuth` wraps protected routes and redirects to `/login` with `state.from`. `GuestOnly` wraps `/login` and `/register` and sends logged-in users to `from` or `/`. The login and register pages never call `navigate()`: starting the session is enough to trigger the redirect.
+  - Registering doesn't log in on the API side, so `RegisterPage` calls login right after.
+  - The login rate limit returns 429. The API doesn't expose `Retry-After` through CORS, so the UI shows a generic "wait a few minutes" message.
+- `src/lib/form-errors.ts`: `applyApiError(error, setError, fields)` puts API validation errors on matching form fields and everything else on `root.server`. `describeError` gives the message for network and 5xx errors.
 - Pages go in `src/pages/`, shared components in `src/components/`. Styling is plain CSS files next to components, using the variables in `src/index.css`.
 - Forms: react-hook-form with zod v4 schemas through `@hookform/resolvers`. Keep schemas in line with the backend's Bean Validation rules.
 
@@ -39,7 +47,7 @@ To run against a local backend: `JWT_SECRET=$(openssl rand -base64 48) ./gradlew
 
 - Vitest with jsdom. `src/test/setup.ts` loads jest-dom matchers and starts a shared MSW server (`src/test/server.ts`) with `onUnhandledRequest: 'error'`, so any request a test doesn't mock fails the test.
 - Mock the API with `server.use(http.get(`${API_URL}/api/...`, ...))`. `API_URL` is `http://api.test`, forced through `test.env` in `vite.config.ts`, so tests ignore local `.env` files. Handlers reset after each test.
-- `renderRoute(path)` in `src/test/render.tsx` renders the real route tree with a fresh query client that doesn't retry.
+- `renderRoute(path)` in `src/test/render.tsx` renders the real route tree with a fresh query client that doesn't retry. To render a page as a logged-in user, call `startSession('token', 3600)` first and mock `GET /api/users/me` (the header fetches it). The setup ends the session and clears `localStorage` after each test.
 - Import `describe`/`it`/`expect` from `vitest` (globals are off).
 
 ## TypeScript / lint constraints
