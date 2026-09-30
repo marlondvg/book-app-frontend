@@ -1,7 +1,7 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HttpResponse, http } from 'msw'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { renderRoute } from '../test/render.tsx'
 import { API_URL, server } from '../test/server.ts'
 import { getSession, startSession } from './session.ts'
@@ -32,6 +32,11 @@ function mockLogin() {
     ),
   )
 }
+
+// The home page lists books; these tests only care that it renders.
+beforeEach(() => {
+  server.use(http.get(`${API_URL}/api/books`, () => HttpResponse.json([])))
+})
 
 async function fillLogin(email: string, password: string) {
   const u = userEvent.setup()
