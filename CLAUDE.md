@@ -40,6 +40,9 @@ To run against a local backend: `JWT_SECRET=$(openssl rand -base64 48) ./gradlew
   - Registering doesn't log in on the API side, so `RegisterPage` calls login right after.
   - The login rate limit returns 429. The API doesn't expose `Retry-After` through CORS, so the UI shows a generic "wait a few minutes" message.
 - `src/lib/form-errors.ts`: `applyApiError(error, setError, fields)` puts API validation errors on matching form fields and everything else on `root.server`. `describeError` gives the message for network and 5xx errors.
+- **Books** (`src/books/`): `types.ts` mirrors the API's `BookResponse` and `ReadingStatus` (`READING_STATUSES`, `STATUS_LABELS`). `books-api.ts` holds the API calls and `queries.ts` the React Query hooks. Query keys come from `bookKeys`; after any change to a book, invalidate `bookKeys.all`.
+  - The status filter on the books page (`/`) is the `?status=` URL parameter, sent to the API as `GET /api/books?status=`. Unknown values show all books.
+  - Dates from the API are `YYYY-MM-DD` strings. Format them as local calendar dates, not through `new Date(iso)`, which reads them as UTC and can shift the day.
 - Pages go in `src/pages/`, shared components in `src/components/`. Styling is plain CSS files next to components, using the variables in `src/index.css`.
 - Forms: react-hook-form with zod v4 schemas through `@hookform/resolvers`. Keep schemas in line with the backend's Bean Validation rules.
 
@@ -47,7 +50,7 @@ To run against a local backend: `JWT_SECRET=$(openssl rand -base64 48) ./gradlew
 
 - Vitest with jsdom. `src/test/setup.ts` loads jest-dom matchers and starts a shared MSW server (`src/test/server.ts`) with `onUnhandledRequest: 'error'`, so any request a test doesn't mock fails the test.
 - Mock the API with `server.use(http.get(`${API_URL}/api/...`, ...))`. `API_URL` is `http://api.test`, forced through `test.env` in `vite.config.ts`, so tests ignore local `.env` files. Handlers reset after each test.
-- `renderRoute(path)` in `src/test/render.tsx` renders the real route tree with a fresh query client that doesn't retry. To render a page as a logged-in user, call `startSession('token', 3600)` first and mock `GET /api/users/me` (the header fetches it). The setup ends the session and clears `localStorage` after each test.
+- `renderRoute(path)` in `src/test/render.tsx` renders the real route tree with a fresh query client that doesn't retry. To render a page as a logged-in user, call `startSession('token', 3600)` first and mock `GET /api/users/me` (the header fetches it). The setup ends the session and clears `localStorage` after each test. `makeBook(overrides)` in `src/test/books.ts` builds API-shaped books.
 - Import `describe`/`it`/`expect` from `vitest` (globals are off).
 
 ## TypeScript / lint constraints
