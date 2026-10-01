@@ -2,19 +2,20 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 24px;
+  margin: 20px 0 28px;
 }
 
 .status-filter a {
-  padding: 4px 12px;
-  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border: 1px solid var(--field-border);
   border-radius: 999px;
-  color: inherit;
+  color: var(--text);
+  font-size: 0.875rem;
   text-decoration: none;
 }
 
 .status-filter a[aria-current='page'] {
   border-color: var(--accent);
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }

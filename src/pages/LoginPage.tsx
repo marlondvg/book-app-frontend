@@ -42,7 +42,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="auth-page">
+    <div className="auth-page panel">
       <h1>Log in</h1>
       <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
         {errors.root?.server && (

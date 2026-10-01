@@ -5,16 +5,18 @@
 }
 
 .field label {
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
 .field input {
   font: inherit;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
-  color: inherit;
+  font-size: 0.9375rem;
+  padding: 9px 11px;
+  border: 1px solid var(--field-border);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text);
 }
 
 .field input[aria-invalid='true'] {
@@ -23,6 +25,6 @@
 
 .field-error {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: var(--danger);
 }

@@ -29,7 +29,7 @@ export function RatingInput({ title, rating, disabled, onChange }: Props) {
       {rating !== null && (
         <button
           type="button"
-          className="rating-clear"
+          className="text-button rating-clear"
           disabled={disabled}
           onClick={() => onChange(null)}
         >
