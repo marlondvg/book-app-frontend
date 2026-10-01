@@ -30,3 +30,12 @@ export type Book = {
   /** ISO instant. */
   createdAt: string
 }
+
+/** Mirrors BookDetailsRequest: the fields a user edits. Empty optional fields are null. */
+export type BookDetails = {
+  title: string
+  author: string
+  pages: number | null
+  isbn: string | null
+  coverUrl: string | null
+}

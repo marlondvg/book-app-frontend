@@ -26,7 +26,13 @@
 }
 
 .book-info {
+  flex: 1;
   min-width: 0;
+}
+
+.book-edit {
+  flex: none;
+  align-self: flex-start;
 }
 
 .book-info p {

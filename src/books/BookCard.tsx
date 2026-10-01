@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import type { ReturnToState } from './return-to.ts'
 import { STATUS_LABELS, type Book } from './types.ts'
 import './BookCard.css'
 
@@ -10,7 +12,13 @@ function formatDate(isoDate: string) {
   return dateFormat.format(new Date(year, month - 1, day))
 }
 
-export function BookCard({ book }: { book: Book }) {
+type Props = {
+  book: Book
+  /** The current list URL, so the edit form comes back to the same filter. */
+  returnTo: string
+}
+
+export function BookCard({ book, returnTo }: Props) {
   const [coverFailed, setCoverFailed] = useState(false)
   const showCover = book.coverUrl && !coverFailed
 
@@ -47,6 +55,14 @@ export function BookCard({ book }: { book: Book }) {
             .join(' · ')}
         </p>
       </div>
+      <Link
+        className="book-edit"
+        to={`/books/${book.id}/edit`}
+        state={{ returnTo } satisfies ReturnToState}
+        aria-label={`Edit ${book.title}`}
+      >
+        Edit
+      </Link>
     </article>
   )
 }

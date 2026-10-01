@@ -42,8 +42,12 @@ To run against a local backend: `JWT_SECRET=$(openssl rand -base64 48) ./gradlew
 - `src/lib/form-errors.ts`: `applyApiError(error, setError, fields)` puts API validation errors on matching form fields and everything else on `root.server`. `describeError` gives the message for network and 5xx errors.
 - **Books** (`src/books/`): `types.ts` mirrors the API's `BookResponse` and `ReadingStatus` (`READING_STATUSES`, `STATUS_LABELS`). `books-api.ts` holds the API calls and `queries.ts` the React Query hooks. Query keys come from `bookKeys`; after any change to a book, invalidate `bookKeys.all`.
   - The status filter on the books page (`/`) is the `?status=` URL parameter, sent to the API as `GET /api/books?status=`. Unknown values show all books.
+  - `BookForm` is shared by `/books/new` and `/books/:id/edit`. Its zod schema mirrors `BookDetailsRequest`: text is trimmed, blank optional fields become `null` (on `PUT`, `null` clears the field), pages is a positive int32, and cover URLs must be http(s). The form's input type (strings) differs from its output type (`BookDetails`), so it uses `useForm<z.input<…>, unknown, BookDetails>`.
+  - Links into the form pass `{ returnTo }` router state (`ReturnToState`). `useReturnTo()` reads it, accepting only same-app paths and falling back to `/`, so saving or cancelling returns to the same list filter.
+  - Saving a book puts it in the detail cache and marks lists stale without awaiting the refetch, so navigation isn't delayed.
+  - `GET /api/books/{id}` answers 404 for missing or other users' books and 400 for an id that isn't a UUID. Treat both as "not found".
   - Dates from the API are `YYYY-MM-DD` strings. Format them as local calendar dates, not through `new Date(iso)`, which reads them as UTC and can shift the day.
-- Pages go in `src/pages/`, shared components in `src/components/`. Styling is plain CSS files next to components, using the variables in `src/index.css`.
+- Pages go in `src/pages/`, shared components in `src/components/`. Styling is plain CSS files next to components, using the variables in `src/index.css`. `index.css` also has shared styles for `button` (and `a.button`, `button.secondary`) and `.form-error`.
 - Forms: react-hook-form with zod v4 schemas through `@hookform/resolvers`. Keep schemas in line with the backend's Bean Validation rules.
 
 ## Testing

@@ -3,7 +3,9 @@ import { GuestOnly } from './auth/GuestOnly.tsx'
 import { RequireAuth } from './auth/RequireAuth.tsx'
 import { Layout } from './components/Layout.tsx'
 import { BooksPage } from './pages/BooksPage.tsx'
+import { EditBookPage } from './pages/EditBookPage.tsx'
 import { LoginPage } from './pages/LoginPage.tsx'
+import { NewBookPage } from './pages/NewBookPage.tsx'
 import { NotFoundPage } from './pages/NotFoundPage.tsx'
 import { RegisterPage } from './pages/RegisterPage.tsx'
 
@@ -20,7 +22,11 @@ export const routes: RouteObject[] = [
       },
       {
         element: <RequireAuth />,
-        children: [{ index: true, element: <BooksPage /> }],
+        children: [
+          { index: true, element: <BooksPage /> },
+          { path: 'books/new', element: <NewBookPage /> },
+          { path: 'books/:id/edit', element: <EditBookPage /> },
+        ],
       },
       { path: '*', element: <NotFoundPage /> },
     ],
