@@ -3,48 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { HttpResponse, http } from 'msw'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { startSession } from '../auth/session.ts'
-import type { Book, BookDetails } from '../books/types.ts'
+import { mockBookApi, problem } from '../test/book-api.ts'
 import { makeBook } from '../test/books.ts'
 import { renderRoute } from '../test/render.tsx'
 import { API_URL, server } from '../test/server.ts'
-
-function problem(status: number, detail: string, extra: object = {}) {
-  return HttpResponse.json(
-    { title: 'Error', status, detail, ...extra },
-    { status, headers: { 'Content-Type': 'application/problem+json' } },
-  )
-}
-
-/** In-memory stand-in for the book endpoints; records the bodies it receives. */
-function mockBookApi(initial: Book[] = []) {
-  const books = [...initial]
-  const received: { method: string; body: BookDetails }[] = []
-  server.use(
-    http.get(`${API_URL}/api/books`, ({ request }) => {
-      const status = new URL(request.url).searchParams.get('status')
-      return HttpResponse.json(status ? books.filter((b) => b.status === status) : books)
-    }),
-    http.get(`${API_URL}/api/books/:id`, ({ params }) => {
-      const book = books.find((b) => b.id === params.id)
-      return book ? HttpResponse.json(book) : problem(404, 'Book not found')
-    }),
-    http.post(`${API_URL}/api/books`, async ({ request }) => {
-      const body = (await request.json()) as BookDetails
-      received.push({ method: 'POST', body })
-      const book = makeBook(body)
-      books.unshift(book)
-      return HttpResponse.json(book, { status: 201 })
-    }),
-    http.put(`${API_URL}/api/books/:id`, async ({ params, request }) => {
-      const body = (await request.json()) as BookDetails
-      received.push({ method: 'PUT', body })
-      const index = books.findIndex((b) => b.id === params.id)
-      books[index] = { ...books[index], ...body }
-      return HttpResponse.json(books[index])
-    }),
-  )
-  return received
-}
 
 beforeEach(() => {
   server.use(
@@ -57,7 +19,7 @@ beforeEach(() => {
 
 describe('add a book', () => {
   it('creates the book from the list and goes back to the same filter', async () => {
-    const received = mockBookApi()
+    const { received } = mockBookApi()
     const { router } = renderRoute('/?status=TO_READ')
     const u = userEvent.setup()
 
@@ -72,13 +34,14 @@ describe('add a book', () => {
     expect(received).toEqual([
       {
         method: 'POST',
+        path: '/api/books',
         body: { title: 'Dune', author: 'Frank Herbert', pages: 412, isbn: null, coverUrl: null },
       },
     ])
   })
 
   it('validates the fields before calling the API', async () => {
-    const received = mockBookApi()
+    const { received } = mockBookApi()
     renderRoute('/books/new')
     const u = userEvent.setup()
 
@@ -162,7 +125,7 @@ describe('edit a book', () => {
   })
 
   it('opens from the list with the current values and saves the changes', async () => {
-    const received = mockBookApi([dune])
+    const { received } = mockBookApi([dune])
     renderRoute('/')
     const u = userEvent.setup()
 
@@ -186,6 +149,7 @@ describe('edit a book', () => {
     expect(received).toEqual([
       {
         method: 'PUT',
+        path: `/api/books/${dune.id}`,
         body: {
           title: 'Dune Messiah',
           author: 'Frank Herbert',

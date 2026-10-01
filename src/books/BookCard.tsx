@@ -1,10 +1,16 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { describeError } from '../lib/form-errors.ts'
+import { useChangeStatus, useDeleteBook, useRateBook } from './queries.ts'
+import { RatingInput } from './RatingInput.tsx'
 import type { ReturnToState } from './return-to.ts'
-import { STATUS_LABELS, type Book } from './types.ts'
+import { allowedTransitions, allowsRating, lostOnStatusChange } from './status-rules.ts'
+import { STATUS_LABELS, type Book, type ReadingStatus } from './types.ts'
 import './BookCard.css'
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
+// English, like the rest of the UI text: "rating and finish date".
+const listFormat = new Intl.ListFormat('en', { type: 'conjunction' })
 
 /** Formats a YYYY-MM-DD date as a local calendar date (new Date(iso) would read it as UTC). */
 function formatDate(isoDate: string) {
@@ -22,8 +28,37 @@ export function BookCard({ book, returnTo }: Props) {
   const [coverFailed, setCoverFailed] = useState(false)
   const showCover = book.coverUrl && !coverFailed
 
+  const [actionError, setActionError] = useState<string | null>(null)
+  const changeStatus = useChangeStatus(book.id)
+  const rateBook = useRateBook(book.id)
+  const deleteBook = useDeleteBook(book.id)
+  const busy = changeStatus.isPending || rateBook.isPending || deleteBook.isPending
+  const callbacks = {
+    onMutate: () => setActionError(null),
+    onError: (error: unknown) => setActionError(describeError(error)),
+  }
+
+  const onStatusChange = (target: ReadingStatus) => {
+    const lost = lostOnStatusChange(book, target)
+    if (
+      lost.length > 0 &&
+      !window.confirm(
+        `Moving “${book.title}” to ${STATUS_LABELS[target]} removes its ${listFormat.format(lost)}. Continue?`,
+      )
+    ) {
+      return
+    }
+    changeStatus.mutate(target, callbacks)
+  }
+
+  const onDelete = () => {
+    if (window.confirm(`Delete “${book.title}”? This cannot be undone.`)) {
+      deleteBook.mutate(undefined, callbacks)
+    }
+  }
+
   return (
-    <article className="book-card">
+    <article className="book-card" aria-busy={busy}>
       <div className="book-cover" aria-hidden="true">
         {showCover ? (
           <img src={book.coverUrl!} alt="" loading="lazy" onError={() => setCoverFailed(true)} />
@@ -34,17 +69,6 @@ export function BookCard({ book, returnTo }: Props) {
       <div className="book-info">
         <h2 className="book-title">{book.title}</h2>
         <p className="book-author">{book.author}</p>
-        <p className="book-meta">
-          <span className={`book-status book-status-${book.status.toLowerCase()}`}>
-            {STATUS_LABELS[book.status]}
-          </span>
-          {book.rating !== null && (
-            <span className="book-rating" role="img" aria-label={`Rated ${book.rating} out of 5`}>
-              {'★'.repeat(book.rating)}
-              {'☆'.repeat(5 - book.rating)}
-            </span>
-          )}
-        </p>
         <p className="book-dates">
           {[
             book.pages !== null && `${book.pages} pages`,
@@ -54,15 +78,51 @@ export function BookCard({ book, returnTo }: Props) {
             .filter(Boolean)
             .join(' · ')}
         </p>
+        <div className="book-actions">
+          <select
+            className={`book-status book-status-${book.status.toLowerCase()}`}
+            aria-label={`Status of ${book.title}`}
+            value={book.status}
+            disabled={busy}
+            onChange={(event) => onStatusChange(event.target.value as ReadingStatus)}
+          >
+            {[book.status, ...allowedTransitions(book.status)].map((status) => (
+              <option key={status} value={status}>
+                {STATUS_LABELS[status]}
+              </option>
+            ))}
+          </select>
+          {allowsRating(book.status) && (
+            <RatingInput
+              title={book.title}
+              rating={book.rating}
+              disabled={busy}
+              onChange={(value) => rateBook.mutate(value, callbacks)}
+            />
+          )}
+          <Link
+            to={`/books/${book.id}/edit`}
+            state={{ returnTo } satisfies ReturnToState}
+            aria-label={`Edit ${book.title}`}
+          >
+            Edit
+          </Link>
+          <button
+            type="button"
+            className="book-delete"
+            aria-label={`Delete ${book.title}`}
+            disabled={busy}
+            onClick={onDelete}
+          >
+            Delete
+          </button>
+        </div>
+        {actionError && (
+          <p role="alert" className="book-action-error">
+            {actionError}
+          </p>
+        )}
       </div>
-      <Link
-        className="book-edit"
-        to={`/books/${book.id}/edit`}
-        state={{ returnTo } satisfies ReturnToState}
-        aria-label={`Edit ${book.title}`}
-      >
-        Edit
-      </Link>
     </article>
   )
 }

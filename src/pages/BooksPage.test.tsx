@@ -54,13 +54,17 @@ describe('books page', () => {
     const first = within(items[0])
     expect(first.getByRole('heading', { name: 'Dune' })).toBeInTheDocument()
     expect(first.getByText('Frank Herbert')).toBeInTheDocument()
-    expect(first.getByText('Read')).toBeInTheDocument()
-    expect(first.getByRole('img', { name: 'Rated 4 out of 5' })).toBeInTheDocument()
+    expect(first.getByRole('combobox', { name: 'Status of Dune' })).toHaveValue('READ')
+    expect(first.getByRole('button', { name: 'Rate 4 out of 5' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
     expect(first.getByText(/412 pages · Started .*2026 · Finished .*2026/)).toBeInTheDocument()
 
     const second = within(items[1])
     expect(second.getByRole('heading', { name: 'The Hobbit' })).toBeInTheDocument()
-    expect(second.queryByRole('img', { name: /Rated/ })).not.toBeInTheDocument()
+    expect(second.getByRole('combobox', { name: 'Status of The Hobbit' })).toHaveValue('READING')
+    expect(second.queryByRole('group', { name: /Rating/ })).not.toBeInTheDocument()
   })
 
   it('shows a loading message while the books load', async () => {
