@@ -20,3 +20,27 @@ export function createBook(details: BookDetails) {
 export function updateBook(id: string, details: BookDetails) {
   return apiFetch<Book>(`/api/books/${encodeURIComponent(id)}`, { method: 'PUT', body: details })
 }
+
+/** 409 when the transition is not allowed (see status-rules.ts). */
+export function changeStatus(id: string, status: ReadingStatus) {
+  return apiFetch<Book>(`/api/books/${encodeURIComponent(id)}/status`, {
+    method: 'PUT',
+    body: { status },
+  })
+}
+
+/** `value` is 1 to 5; 409 unless the book is READ or ABANDONED. */
+export function rateBook(id: string, value: number) {
+  return apiFetch<Book>(`/api/books/${encodeURIComponent(id)}/rating`, {
+    method: 'PUT',
+    body: { value },
+  })
+}
+
+export function clearRating(id: string) {
+  return apiFetch<Book>(`/api/books/${encodeURIComponent(id)}/rating`, { method: 'DELETE' })
+}
+
+export function deleteBook(id: string) {
+  return apiFetch<void>(`/api/books/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}

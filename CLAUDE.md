@@ -46,6 +46,9 @@ To run against a local backend: `JWT_SECRET=$(openssl rand -base64 48) ./gradlew
   - Links into the form pass `{ returnTo }` router state (`ReturnToState`). `useReturnTo()` reads it, accepting only same-app paths and falling back to `/`, so saving or cancelling returns to the same list filter.
   - Saving a book puts it in the detail cache and marks lists stale without awaiting the refetch, so navigation isn't delayed.
   - `GET /api/books/{id}` answers 404 for missing or other users' books and 400 for an id that isn't a UUID. Treat both as "not found".
+  - Status, rating and delete controls live on each `BookCard` in the list; there is no book detail page.
+    - `status-rules.ts` mirrors the backend's status transition table and side effects. The status menu offers only allowed moves. `lostOnStatusChange` drives a `window.confirm` before a change would clear the rating or dates (to To read: rating and both dates; to Reading: rating and finish date). The API stays the source of truth: a 409 is shown on the card.
+    - Every book mutation updates the book in all cached lists, then marks lists stale. Delete removes it from cached lists.
   - Dates from the API are `YYYY-MM-DD` strings. Format them as local calendar dates, not through `new Date(iso)`, which reads them as UTC and can shift the day.
 - Pages go in `src/pages/`, shared components in `src/components/`. Styling is plain CSS files next to components, using the variables in `src/index.css`. `index.css` also has shared styles for `button` (and `a.button`, `button.secondary`) and `.form-error`.
 - Forms: react-hook-form with zod v4 schemas through `@hookform/resolvers`. Keep schemas in line with the backend's Bean Validation rules.
@@ -54,7 +57,7 @@ To run against a local backend: `JWT_SECRET=$(openssl rand -base64 48) ./gradlew
 
 - Vitest with jsdom. `src/test/setup.ts` loads jest-dom matchers and starts a shared MSW server (`src/test/server.ts`) with `onUnhandledRequest: 'error'`, so any request a test doesn't mock fails the test.
 - Mock the API with `server.use(http.get(`${API_URL}/api/...`, ...))`. `API_URL` is `http://api.test`, forced through `test.env` in `vite.config.ts`, so tests ignore local `.env` files. Handlers reset after each test.
-- `renderRoute(path)` in `src/test/render.tsx` renders the real route tree with a fresh query client that doesn't retry. To render a page as a logged-in user, call `startSession('token', 3600)` first and mock `GET /api/users/me` (the header fetches it). The setup ends the session and clears `localStorage` after each test. `makeBook(overrides)` in `src/test/books.ts` builds API-shaped books.
+- `renderRoute(path)` in `src/test/render.tsx` renders the real route tree with a fresh query client that doesn't retry. To render a page as a logged-in user, call `startSession('token', 3600)` first and mock `GET /api/users/me` (the header fetches it). The setup ends the session and clears `localStorage` after each test. `makeBook(overrides)` in `src/test/books.ts` builds API-shaped books. `mockBookApi(books)` in `src/test/book-api.ts` serves all `/api/books` endpoints from memory and returns `{ books, received }`, where `received` is every write request as `{ method, path, body }`. Override one handler with `server.use(...)` to simulate an error. Stub `window.confirm` with `vi.spyOn` in tests that change status or delete.
 - Import `describe`/`it`/`expect` from `vitest` (globals are off).
 
 ## TypeScript / lint constraints

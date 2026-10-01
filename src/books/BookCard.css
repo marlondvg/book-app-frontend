@@ -5,6 +5,10 @@
   border-bottom: 1px solid var(--border);
 }
 
+.book-card[aria-busy='true'] {
+  opacity: 0.6;
+}
+
 .book-cover {
   flex: none;
   display: grid;
@@ -30,11 +34,6 @@
   min-width: 0;
 }
 
-.book-edit {
-  flex: none;
-  align-self: flex-start;
-}
-
 .book-info p {
   margin: 0;
 }
@@ -49,19 +48,27 @@
   color: var(--muted);
 }
 
-.book-info .book-meta {
+.book-info .book-dates {
+  margin-top: 4px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.book-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 8px 16px;
   margin-top: 8px;
 }
 
 .book-status {
-  padding: 0 8px;
-  border-radius: 999px;
-  font-size: 0.8125rem;
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 2px 6px;
   border: 1px solid currentColor;
+  border-radius: 999px;
+  background: var(--bg);
 }
 
 .book-status-to_read {
@@ -80,13 +87,16 @@
   color: var(--danger);
 }
 
-.book-rating {
-  color: var(--star);
-  letter-spacing: 1px;
+.book-actions .book-delete {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--danger);
+  text-decoration: underline;
 }
 
-.book-info .book-dates {
-  margin-top: 4px;
+.book-info .book-action-error {
+  margin-top: 8px;
   font-size: 0.875rem;
-  color: var(--muted);
+  color: var(--danger);
 }

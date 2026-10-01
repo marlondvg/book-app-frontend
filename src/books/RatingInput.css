@@ -1,0 +1,25 @@
+.rating-input {
+  display: flex;
+  align-items: center;
+}
+
+.rating-input button {
+  padding: 0 2px;
+  border: none;
+  background: none;
+  color: var(--star);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.rating-input .star:not(:disabled):hover {
+  transform: scale(1.15);
+}
+
+.rating-input .rating-clear {
+  margin-left: 8px;
+  padding: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  text-decoration: underline;
+}
