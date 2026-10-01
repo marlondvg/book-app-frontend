@@ -67,6 +67,19 @@ describe('books page', () => {
     expect(second.queryByRole('group', { name: /Rating/ })).not.toBeInTheDocument()
   })
 
+  it('shows API dates as the same calendar day west of UTC', async () => {
+    // Guards the test itself: in this zone, reading the date as UTC lands on Sept 29.
+    expect(new Date('2026-09-30').getDate()).toBe(29)
+    mockBooks([
+      book({ title: 'Emma', status: 'READ', startedAt: '2026-09-30', finishedAt: '2026-10-01' }),
+    ])
+    renderRoute('/')
+
+    expect(
+      await screen.findByText('Started Sep 30, 2026 · Finished Oct 1, 2026'),
+    ).toBeInTheDocument()
+  })
+
   it('shows a loading message while the books load', async () => {
     mockBooks([dune])
     renderRoute('/')

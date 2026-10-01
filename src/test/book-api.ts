@@ -55,7 +55,7 @@ export function mockBookApi(initial: Book[] = []) {
       return HttpResponse.json(books[i])
     }),
     http.put(`${API_URL}/api/books/:id/status`, async ({ params, request }) => {
-      const body = (await request.json()) as { status: ReadingStatus }
+      const body = (await request.json()) as { status: ReadingStatus; timeZone?: string }
       await record(request, body)
       const i = find(params.id)
       if (i === -1) return notFound()

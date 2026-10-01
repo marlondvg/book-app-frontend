@@ -58,7 +58,11 @@ describe('changing the status', () => {
 
     await waitFor(() => expect(emma.getByRole('combobox')).toHaveValue('READING'))
     expect(received).toEqual([
-      { method: 'PUT', path: `/api/books/${toRead.id}/status`, body: { status: 'READING' } },
+      {
+        method: 'PUT',
+        path: `/api/books/${toRead.id}/status`,
+        body: { status: 'READING', timeZone: 'America/Bogota' },
+      },
     ])
     expect(confirm).not.toHaveBeenCalled()
   })

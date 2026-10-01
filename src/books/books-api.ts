@@ -1,4 +1,5 @@
 import { apiFetch } from '../lib/api-client.ts'
+import { userTimeZone } from '../lib/time-zone.ts'
 import type { Book, BookDetails, ReadingStatus } from './types.ts'
 
 /** The caller's books, newest first; all of them when `status` is null. */
@@ -21,11 +22,16 @@ export function updateBook(id: string, details: BookDetails) {
   return apiFetch<Book>(`/api/books/${encodeURIComponent(id)}`, { method: 'PUT', body: details })
 }
 
-/** 409 when the transition is not allowed (see status-rules.ts). */
+/**
+ * 409 when the transition is not allowed (see status-rules.ts). Sends the user's time zone
+ * so the API stamps startedAt/finishedAt with the user's date instead of the UTC date;
+ * without one (the field is then omitted) the API falls back to UTC.
+ * See docs/specs/status-timezone.md.
+ */
 export function changeStatus(id: string, status: ReadingStatus) {
   return apiFetch<Book>(`/api/books/${encodeURIComponent(id)}/status`, {
     method: 'PUT',
-    body: { status },
+    body: { status, timeZone: userTimeZone() },
   })
 }
 

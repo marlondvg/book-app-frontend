@@ -7,7 +7,12 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    // Fixed so MSW handlers never depend on a developer's .env files.
-    env: { VITE_API_URL: 'http://api.test' },
+    env: {
+      // Fixed so MSW handlers never depend on a developer's .env files.
+      VITE_API_URL: 'http://api.test',
+      // West of UTC, so code that reads a YYYY-MM-DD date as UTC midnight shows the
+      // previous day and fails the tests. Also the zone userTimeZone() reports.
+      TZ: 'America/Bogota',
+    },
   },
 })
