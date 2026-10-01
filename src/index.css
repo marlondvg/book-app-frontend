@@ -36,8 +36,11 @@ a {
   color: var(--accent);
 }
 
-button {
+button,
+a.button {
+  display: inline-block;
   font: inherit;
+  text-decoration: none;
   padding: 8px 14px;
   border: 1px solid var(--accent);
   border-radius: 6px;
@@ -54,4 +57,13 @@ button:disabled {
 button.secondary {
   background: transparent;
   color: var(--accent);
+}
+
+/* Form-level error, shown above a form's fields. */
+.form-error {
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  color: var(--danger);
 }
