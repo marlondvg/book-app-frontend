@@ -55,14 +55,24 @@ To run against a local backend: `JWT_SECRET=$(openssl rand -base64 48) ./gradlew
     - `changeStatus` sends `timeZone` from `userTimeZone()` (`src/lib/time-zone.ts`), read on each request, so the API stamps `startedAt` / `finishedAt` with the user's date rather than the UTC date. If the browser reports no zone, the field is left out and the API uses UTC. Spec: `docs/specs/status-timezone.md`.
     - Every book mutation updates the book in all cached lists, then marks lists stale. Delete removes it from cached lists.
   - Dates from the API are `YYYY-MM-DD` strings. Format them as local calendar dates, not through `new Date(iso)`, which reads them as UTC and can shift the day.
-- Pages go in `src/pages/`, shared components in `src/components/`. Styling is plain CSS files next to components, using the variables in `src/index.css`. `index.css` also has shared styles for `button` (and `a.button`, `button.secondary`) and `.form-error`.
+- Pages go in `src/pages/`, shared components in `src/components/`. Styling is plain CSS files next to components, using the variables in `src/index.css`.
+- **Theme:** a "library" palette. Light ("reading room") is the default under `:root`; dark ("lamplit") overrides the same variables under `:root[data-theme='dark']`. Don't use `prefers-color-scheme`: the app ignores the OS setting and starts light.
+  - `src/theme/theme.ts` is a small store like `session.ts`: `useTheme()`, `setTheme()`, `initTheme()`. It sets `data-theme` on `<html>` and saves the choice in `localStorage` (`book-tracker.theme`).
+  - An inline script in `index.html` applies a saved dark theme before first paint. Keep its key in sync with `theme.ts`.
+  - `ThemeToggle` in the header switches it.
+- **Colours:** use the variables, never raw hex, except the bookcloth colours in `BookCard.tsx`.
+  - Text colours are checked to pass WCAG AA on `--bg` and `--surface` in both themes; `--star` and `--field-border` pass 3:1. Check contrast when adding colours.
+  - `--accent` is a button fill (with `--on-accent` text). Text links use `--link`, which differs in dark mode.
+  - Status colours are `--status-to-read`, `--status-reading`, `--status-read` and `--status-abandoned`.
+- **Type:** headings use `--serif` (Libre Baskerville, loaded from Google Fonts in `index.html`); everything else uses `--sans`.
+- **Shared classes in `index.css`:** `button` / `a.button` (primary), `button.secondary`, `button.text-button` (`.danger` for destructive), `.panel` (paper card for forms), `.form-error`. The header uses `.header-button`.
 - Forms: react-hook-form with zod v4 schemas through `@hookform/resolvers`. Keep schemas in line with the backend's Bean Validation rules.
 
 ## Testing
 
 - Vitest with jsdom. `src/test/setup.ts` loads jest-dom matchers and starts a shared MSW server (`src/test/server.ts`) with `onUnhandledRequest: 'error'`, so any request a test doesn't mock fails the test.
 - Mock the API with `server.use(http.get(`${API_URL}/api/...`, ...))`. `API_URL` is `http://api.test`, forced through `test.env` in `vite.config.ts`, so tests ignore local `.env` files. Handlers reset after each test.
-- `renderRoute(path)` in `src/test/render.tsx` renders the real route tree with a fresh query client that doesn't retry. To render a page as a logged-in user, call `startSession('token', 3600)` first and mock `GET /api/users/me` (the header fetches it). The setup ends the session and clears `localStorage` after each test. `makeBook(overrides)` in `src/test/books.ts` builds API-shaped books. `mockBookApi(books)` in `src/test/book-api.ts` serves all `/api/books` endpoints from memory and returns `{ books, received }`, where `received` is every write request as `{ method, path, body }`. Override one handler with `server.use(...)` to simulate an error. Stub `window.confirm` with `vi.spyOn` in tests that change status or delete.
+- `renderRoute(path)` in `src/test/render.tsx` renders the real route tree with a fresh query client that doesn't retry. To render a page as a logged-in user, call `startSession('token', 3600)` first and mock `GET /api/users/me` (the header fetches it). The setup ends the session, resets the theme to light and clears `localStorage` after each test. `makeBook(overrides)` in `src/test/books.ts` builds API-shaped books. `mockBookApi(books)` in `src/test/book-api.ts` serves all `/api/books` endpoints from memory and returns `{ books, received }`, where `received` is every write request as `{ method, path, body }`. Override one handler with `server.use(...)` to simulate an error. Stub `window.confirm` with `vi.spyOn` in tests that change status or delete.
 - Import `describe`/`it`/`expect` from `vitest` (globals are off).
 - Tests run with `TZ=America/Bogota` (set in `vite.config.ts`), west of UTC, so a date shifted by UTC parsing fails. `userTimeZone()` reports that zone, and status-change request bodies include `timeZone: 'America/Bogota'`.
 

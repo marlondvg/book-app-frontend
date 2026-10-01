@@ -1,6 +1,11 @@
 .auth-page {
-  max-width: 360px;
-  margin: 48px auto;
+  max-width: 400px;
+  margin: 8px auto 0;
+}
+
+.auth-page h1 {
+  font-size: 1.75rem;
+  margin-bottom: 20px;
 }
 
 .auth-form {

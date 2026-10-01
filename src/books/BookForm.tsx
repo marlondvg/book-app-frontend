@@ -78,7 +78,7 @@ export function BookForm({ book, submitLabel, cancelTo, onSubmit }: Props) {
   }
 
   return (
-    <form className="book-form" onSubmit={handleSubmit(submit)} noValidate>
+    <form className="book-form panel" onSubmit={handleSubmit(submit)} noValidate>
       {errors.root?.server && (
         <p role="alert" className="form-error">
           {errors.root.server.message}

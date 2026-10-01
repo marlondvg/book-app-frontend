@@ -19,7 +19,10 @@ export function BooksPage() {
   return (
     <>
       <div className="books-header">
-        <h1>Your books</h1>
+        <div>
+          <p className="books-kicker">Your reading room</p>
+          <h1>Your books</h1>
+        </div>
         <Link className="button" to="/books/new" state={returnTo}>
           Add a book
         </Link>

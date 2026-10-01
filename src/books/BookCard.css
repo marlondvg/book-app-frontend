@@ -1,32 +1,63 @@
 .book-card {
   display: flex;
-  gap: 16px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border);
+  gap: 20px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
 }
 
 .book-card[aria-busy='true'] {
   opacity: 0.6;
 }
 
+/* A physical book: slight rounding on the fore-edge, a shadow, and spine shading. */
 .book-cover {
+  position: relative;
   flex: none;
-  display: grid;
-  place-items: center;
-  width: 64px;
-  height: 96px;
-  border-radius: 4px;
+  width: 72px;
+  height: 108px;
+  border-radius: 2px 4px 4px 2px;
   overflow: hidden;
   background: var(--border);
-  color: var(--muted);
-  font-size: 1.5rem;
-  font-weight: 600;
+  box-shadow: var(--cover-shadow);
+}
+
+.book-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgb(0 0 0 / 28%) 0,
+    rgb(255 255 255 / 18%) 3px,
+    rgb(0 0 0 / 12%) 7px,
+    transparent 12px
+  );
+  pointer-events: none;
 }
 
 .book-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* No cover image: a cloth binding with the initial stamped in gold between two rules. */
+.book-cover.cloth {
+  display: grid;
+  place-items: center;
+}
+
+.cloth-initial {
+  padding: 4px 10px;
+  border-top: 1px solid var(--brass);
+  border-bottom: 1px solid var(--brass);
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--brass);
 }
 
 .book-info {
@@ -40,16 +71,18 @@
 
 .book-title {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   overflow-wrap: anywhere;
 }
 
-.book-author {
+.book-info .book-author {
+  margin-top: 4px;
+  font: italic 0.9375rem var(--serif);
   color: var(--muted);
 }
 
 .book-info .book-dates {
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 0.875rem;
   color: var(--muted);
 }
@@ -58,41 +91,38 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 16px;
-  margin-top: 8px;
+  gap: 8px 18px;
+  margin-top: 12px;
+}
+
+.book-actions a {
+  font-size: 0.875rem;
 }
 
 .book-status {
+  min-height: 32px;
   font: inherit;
   font-size: 0.875rem;
-  padding: 2px 6px;
+  padding: 4px 10px;
   border: 1px solid currentColor;
   border-radius: 999px;
-  background: var(--bg);
+  background: var(--surface);
 }
 
 .book-status-to_read {
-  color: var(--muted);
+  color: var(--status-to-read);
 }
 
 .book-status-reading {
-  color: var(--accent);
+  color: var(--status-reading);
 }
 
 .book-status-read {
-  color: var(--success);
+  color: var(--status-read);
 }
 
 .book-status-abandoned {
-  color: var(--danger);
-}
-
-.book-actions .book-delete {
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--danger);
-  text-decoration: underline;
+  color: var(--status-abandoned);
 }
 
 .book-info .book-action-error {

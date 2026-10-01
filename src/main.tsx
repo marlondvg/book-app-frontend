@@ -6,8 +6,10 @@ import { initSession } from './auth/session.ts'
 import { AppProviders } from './components/AppProviders.tsx'
 import { createQueryClient } from './lib/query-client.ts'
 import { routes } from './routes.tsx'
+import { initTheme } from './theme/theme.ts'
 
 initSession()
+initTheme()
 const queryClient = createQueryClient()
 const router = createBrowserRouter(routes)
 

@@ -18,6 +18,16 @@ function formatDate(isoDate: string) {
   return dateFormat.format(new Date(year, month - 1, day))
 }
 
+// Bookcloth colours for books without a cover; the gold initial is legible on each.
+const CLOTH_COLORS = ['#2f4f3f', '#6e2a2a', '#1f3550', '#4a3a5c', '#5a4632']
+
+/** Same book, same cloth: picked from the id so it never changes between renders. */
+function clothColor(id: string) {
+  let hash = 0
+  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0
+  return CLOTH_COLORS[Math.abs(hash) % CLOTH_COLORS.length]
+}
+
 type Props = {
   book: Book
   /** The current list URL, so the edit form comes back to the same filter. */
@@ -59,11 +69,15 @@ export function BookCard({ book, returnTo }: Props) {
 
   return (
     <article className="book-card" aria-busy={busy}>
-      <div className="book-cover" aria-hidden="true">
+      <div
+        className={showCover ? 'book-cover' : 'book-cover cloth'}
+        style={showCover ? undefined : { backgroundColor: clothColor(book.id) }}
+        aria-hidden="true"
+      >
         {showCover ? (
           <img src={book.coverUrl!} alt="" loading="lazy" onError={() => setCoverFailed(true)} />
         ) : (
-          <span>{book.title.charAt(0).toUpperCase()}</span>
+          <span className="cloth-initial">{book.title.charAt(0).toUpperCase()}</span>
         )}
       </div>
       <div className="book-info">
@@ -109,7 +123,7 @@ export function BookCard({ book, returnTo }: Props) {
           </Link>
           <button
             type="button"
-            className="book-delete"
+            className="text-button danger"
             aria-label={`Delete ${book.title}`}
             disabled={busy}
             onClick={onDelete}
