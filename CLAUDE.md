@@ -6,7 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Frontend for a personal book reading tracker. The backend is `book-api`, a Spring Boot app in the sibling directory `../book-api`. Its `AGENTS.md` and `docs/specs/*.md` are the source of truth for endpoints, request/response shapes, status rules and error responses. Read the relevant spec before building a feature against the API.
 
-Deployment target is Vercel. The live API is `https://book-api-oasv.onrender.com`, which runs on Render's free plan and can take about a minute to wake up.
+Deployed on Vercel from `main`: https://book-app-frontend-lilac.vercel.app. The live API is `https://book-api-oasv.onrender.com`, which runs on Render's free plan and can take about a minute to wake up.
+
+- `VITE_API_URL` is set in the Vercel project and built into the bundle, so changing it requires a redeploy.
+- `vercel.json` sends every path except `/assets/` to `index.html`, so client-side routes survive a reload. New top-level routes need nothing extra.
+- The API's `CORS_ALLOWED_ORIGINS` (on Render) must contain the production URL. Preview deployments have their own URLs and are not allowed.
 
 ## Commands
 
